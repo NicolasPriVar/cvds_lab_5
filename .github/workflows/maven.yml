@@ -1,46 +1,42 @@
----
-  name: Build, Test, and Deploy
-  on:
-    push:
-      branches:
-        - main
-    pull_request:
-      branches:
-        - main
-  jobs:
-    build:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
-        - name: Set up Maven
-          uses: actions/setup-java@v1
-          with:
-            java-version: "17"
-        - name: Build with Maven (compile phase only)
-          run: >
-            cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
-  
-            mvn compile
-    test:
-      needs: build
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
-        - name: Set up Maven
-          uses: actions/setup-java@v1
-          with:
-            java-version: "17"
-        - name: Run tests with Maven (verify phase)
-          run: >
-            cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
-  
-            mvn verify
-    deploy:
-      needs: test
-      runs-on: ubuntu-latest
-      steps:
-        - name: Print deployment message
-          run: echo "En construcción ..."
-  
+trigger:
+  branches:
+    include:
+      - main
+
+jobs:
+- job: Build
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - checkout: self
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '17'
+        jdkArchitectureOption: 'x64'
+    - script: |
+        cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
+        mvn compile
+      displayName: 'Build with Maven (compile phase only)'
+
+- job: Test
+  dependsOn: Build
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - checkout: self
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '17'
+        jdkArchitectureOption: 'x64'
+    - script: |
+        cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
+        mvn verify
+      displayName: 'Run tests with Maven (verify phase)'
+
+- job: Deploy
+  dependsOn: Test
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - script: echo "En construcción ..."
+      displayName: 'Print deployment message'
