@@ -3,20 +3,47 @@
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/java
 
-trigger:
-- main
-
-pool:
-  vmImage: ubuntu-latest
-
-steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.11'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+  name: Build, Test, and Deploy
+  on:
+    push:
+      branches:
+        - main
+    pull_request:
+      branches:
+        - main
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+        - name: Set up Maven
+          uses: actions/setup-java@v1
+          with:
+            java-version: "17"
+        - name: Build with Maven (compile phase only)
+          run: >
+            cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
+  
+            mvn compile
+    test:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+        - name: Set up Maven
+          uses: actions/setup-java@v1
+          with:
+            java-version: "17"
+        - name: Run tests with Maven (verify phase)
+          run: >
+            cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
+  
+            mvn verify
+    deploy:
+      needs: test
+      runs-on: ubuntu-latest
+      steps:
+        - name: Print deployment message
+          run: echo "En construcción ..."
