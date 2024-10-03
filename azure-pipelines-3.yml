@@ -1,0 +1,42 @@
+trigger:
+  branches:
+    include:
+      - main
+
+jobs:
+- job: Build
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - checkout: self
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '17'
+        jdkArchitectureOption: 'x64'
+    - script: |
+        cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
+        mvn compile
+      displayName: 'Build with Maven (compile phase only)'
+
+- job: Test
+  dependsOn: Build
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - checkout: self
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '17'
+        jdkArchitectureOption: 'x64'
+    - script: |
+        cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
+        mvn verify
+      displayName: 'Run tests with Maven (verify phase)'
+
+- job: Deploy
+  dependsOn: Test
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+    - script: echo "En construcción ..."
+      displayName: 'Print deployment message'
