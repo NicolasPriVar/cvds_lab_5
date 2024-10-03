@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #task-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #task-input, #task-desc {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #000000;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #2ba8e2;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #000000;
+        }
+
+        #task-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        #task-list li {
+            padding: 12px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.3s ease;
+        }
+
+        #task-list li:hover {
+            background-color: #f1f1f1;
+        }
+
+        .remove-task, .edit-task {
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .remove-task:hover {
+            color: #d12626;
+        }
+
+        .edit-task:hover {
+            color: #2ba8e2;
+        }
+
+        .task-text, .task-desc {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .task-desc {
+            font-weight: normal;
+            color: #555;
+            margin-left: 20px;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: #aaa;
+        }
+
+        .checkbox {
+            cursor: pointer;
+        }
+
+        .task-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Tareas</h1>
+
+        <!-- Formulario para añadir tareas -->
+        <form id="task-form">
+            <input type="text" id="task-input" placeholder="Nombre de la tarea" required>
+            <textarea id="task-desc" placeholder="Descripción de la tarea" required></textarea>
+            <button type="submit">Añadir</button>
+        </form>
+
+        <!-- Lista de tareas -->
+        <ul id="task-list">
+            <!-- Las tareas aparecerán aquí -->
+        </ul>
+    </div>
+
+    <script>
+        // Obtener elementos del DOM
+        const taskForm = document.getElementById('task-form'); // Formulario para agregar tareas
+        const taskInput = document.getElementById('task-input'); // Campo de entrada para el nombre de la tarea
+        const taskDesc = document.getElementById('task-desc'); // Campo de entrada para la descripción de la tarea
+        const taskList = document.getElementById('task-list'); // Lista donde se mostrarán las tareas
+    
+        // Función para cargar todas las tareas desde el backend al iniciar la página
+        function cargarTareas() {
+            fetch("http://localhost:8081/api/tareas") // Realiza una solicitud GET al backend
+                .then(response => response.json()) // Convierte la respuesta en JSON
+                .then(tareas => {
+                    tareas.forEach(tarea => { // Itera sobre cada tarea recibida
+                        const li = document.createElement('li'); // Crea un nuevo elemento de lista
+                        li.dataset.taskId = tarea.id; // Asigna el ID de la tarea
+    
+                        // Crear el checkbox para marcar como completada
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.classList.add('checkbox');
+                        checkbox.checked = tarea.completada; // Marca como completada si corresponde
+    
+                        // Crear un contenedor para el texto de la tarea y la descripción
+                        const taskInfo = document.createElement('div');
+                        taskInfo.classList.add('task-info');
+    
+                        // Crear el elemento para el nombre de la tarea
+                        const taskSpan = document.createElement('span');
+                        taskSpan.classList.add('task-text');
+                        taskSpan.textContent = tarea.nombre;
+    
+                        if (tarea.completada) {
+                            taskSpan.classList.add('completed'); // Añadir clase completada si la tarea está completada
+                        }
+    
+                        // Crear el elemento para la descripción de la tarea
+                        const taskDescSpan = document.createElement('span');
+                        taskDescSpan.classList.add('task-desc');
+                        taskDescSpan.textContent = tarea.descripcion;
+    
+                        // Crear el botón de editar
+                        const editBtn = document.createElement('span');
+                        editBtn.classList.add('edit-task');
+                        editBtn.textContent = 'Editar';
+    
+                        // Crear el botón de eliminar
+                        const removeBtn = document.createElement('span');
+                        removeBtn.classList.add('remove-task');
+                        removeBtn.textContent = 'x';
+    
+                        // Añadir el texto de la tarea y la descripción al contenedor taskInfo
+                        taskInfo.appendChild(taskSpan);
+                        taskInfo.appendChild(taskDescSpan);
+    
+                        // Añadir el checkbox, el contenedor taskInfo, el botón de editar y el de eliminar al li
+                        li.appendChild(checkbox);
+                        li.appendChild(taskInfo);
+                        li.appendChild(editBtn);
+                        li.appendChild(removeBtn);
+    
+                        // Añadir el nuevo elemento a la lista
+                        taskList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error al cargar tareas:", error); // Manejo de errores
+                });
+        }
+    
+        // Llamar a cargarTareas al cargar la página
+        window.onload = cargarTareas; // Cuando la ventana se carga, se llaman las tareas
+    
+        // Añadir tarea
+        taskForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+    
+            const newTask = taskInput.value.trim(); // Obtener el nombre de la nueva tarea
+            const newDesc = taskDesc.value.trim(); // Obtener la descripción de la nueva tarea
+    
+            // Comprobar que los campos no estén vacíos
+            if (newTask !== '' && newDesc !== '') {
+                const taskData = {
+                    nombre: newTask,
+                    descripcion: newDesc
+                };
+    
+                // Realizar una solicitud POST para agregar la tarea
+                fetch("http://localhost:8081/api/tareas", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json", // Indicar el tipo de contenido
+                    },
+                    body: JSON.stringify(taskData), // Convertir el objeto a JSON
+                })
+                .then(response => response.json()) // Convierte la respuesta en JSON
+                .then(data => {
+                    console.log("Tarea añadida:", data); // Muestra en consola la tarea añadida
+                    const li = document.createElement('li'); // Crear un nuevo elemento de lista
+                    li.dataset.taskId = data.id; // Asignar el ID de la tarea
+    
+                    // Crear el checkbox para la nueva tarea
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.classList.add('checkbox');
+    
+                    // Crear un contenedor para el texto de la tarea y la descripción
+                    const taskInfo = document.createElement('div');
+                    taskInfo.classList.add('task-info');
+    
+                    // Crear el elemento para el nombre de la tarea
+                    const taskSpan = document.createElement('span');
+                    taskSpan.classList.add('task-text');
+                    taskSpan.textContent = newTask;
+    
+                    // Crear el elemento para la descripción de la tarea
+                    const taskDescSpan = document.createElement('span');
+                    taskDescSpan.classList.add('task-desc');
+                    taskDescSpan.textContent = newDesc;
+    
+                    // Crear el botón de editar
+                    const editBtn = document.createElement('span');
+                    editBtn.classList.add('edit-task');
+                    editBtn.textContent = 'Editar';
+    
+                    // Crear el botón de eliminar
+                    const removeBtn = document.createElement('span');
+                    removeBtn.classList.add('remove-task');
+                    removeBtn.textContent = 'x';
+    
+                    // Añadir el texto de la tarea y la descripción al contenedor taskInfo
+                    taskInfo.appendChild(taskSpan);
+                    taskInfo.appendChild(taskDescSpan);
+    
+                    // Añadir el checkbox, el contenedor taskInfo, el botón de editar y el de eliminar al li
+                    li.appendChild(checkbox);
+                    li.appendChild(taskInfo);
+                    li.appendChild(editBtn);
+                    li.appendChild(removeBtn);
+    
+                    // Añadir el nuevo elemento a la lista
+                    taskList.appendChild(li);
+    
+                    // Limpiar los campos de entrada
+                    taskInput.value = ''; // Limpiar el campo de entrada de la tarea
+                    taskDesc.value = ''; // Limpiar el campo de entrada de la descripción
+                })
+                .catch(error => {
+                    console.error("Error al añadir tarea:", error); // Manejo de errores
+                });
+            }
+        });
+    
+        // Interacciones en la lista de tareas (completar, editar, eliminar)
+        taskList.addEventListener('click', function (e) {
+            // Eliminar tarea
+            if (e.target.classList.contains('remove-task')) {
+                const li = e.target.parentElement; // Obtener el elemento li correspondiente
+                const taskId = li.dataset.taskId; // Obtener el ID de la tarea
+    
+                // Realizar una solicitud DELETE para eliminar la tarea
+                fetch(`http://localhost:8081/api/tareas/${taskId}`, {
+                    method: "DELETE",
+                })
+                .then(() => {
+                    console.log("Tarea eliminada"); // Mostrar en consola que la tarea fue eliminada
+                    li.remove(); // Eliminar el elemento de la lista
+                })
+                .catch(error => {
+                    console.error("Error al eliminar tarea:", error); // Manejo de errores
+                });
+            }
+    
+            // Completar tarea
+            if (e.target.classList.contains('checkbox')) {
+                const li = e.target.parentElement; // Obtener el elemento li correspondiente
+                const taskId = li.dataset.taskId; // Obtener el ID de la tarea
+                const isChecked = e.target.checked; // Obtener el estado del checkbox
+    
+                // Realizar una solicitud PUT para marcar la tarea como completada
+                fetch(`http://localhost:8081/api/tareas/${taskId}/completar`, {
+                    method: "PUT",
+                })
+                .then(response => response.json()) // Convierte la respuesta en JSON
+                .then(data => {
+                    const taskSpan = li.querySelector('.task-text'); // Obtener el elemento de texto de la tarea
+                    if (data.completada) {
+                        taskSpan.classList.add('completed'); // Añadir clase 'completed' si la tarea está completada
+                    } else {
+                        taskSpan.classList.remove('completed'); // Remover clase 'completed' si no está completada
+                    }
+                })
+                .catch(error => {
+                    console.error("Error al completar tarea:", error); // Manejo de errores
+                });
+            }
+    
+            // Editar tarea
+            if (e.target.classList.contains('edit-task')) {
+                const li = e.target.parentElement; // Obtener el elemento li correspondiente
+                const taskId = li.dataset.taskId; // Obtener el ID de la tarea
+    
+                const newTaskName = prompt('Edita el nombre de la tarea:'); // Pedir al usuario que edite el nombre
+                const newTaskDesc = prompt('Edita la descripción de la tarea:'); // Pedir al usuario que edite la descripción
+    
+                // Verificar que el usuario no haya cancelado el prompt
+                if (newTaskName !== null && newTaskDesc !== null) {
+                    const taskData = {
+                        nombre: newTaskName,
+                        descripcion: newTaskDesc
+                    };
+    
+                    // Realizar una solicitud PUT para actualizar la tarea
+                    fetch(`http://localhost:8081/api/tareas/${taskId}/actualizar`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json", // Indicar el tipo de contenido
+                        },
+                        body: JSON.stringify(taskData), // Convertir el objeto a JSON
+                    })
+                    .then(response => response.json()) // Convierte la respuesta en JSON
+                    .then(data => {
+                        console.log("Tarea actualizada:", data); // Mostrar en consola la tarea actualizada
+    
+                        const taskSpan = li.querySelector('.task-text'); // Obtener el elemento de texto de la tarea
+                        const taskDescSpan = li.querySelector('.task-desc'); // Obtener el elemento de descripción de la tarea
+    
+                        // Actualizar el contenido de los elementos
+                        taskSpan.textContent = newTaskName; 
+                        taskDescSpan.textContent = newTaskDesc;
+                    })
+                    .catch(error => {
+                        console.error("Error al actualizar tarea:", error); // Manejo de errores
+                    });
+                }
+            }
+        });
+    </script>
+    
+</body>
+</html>
