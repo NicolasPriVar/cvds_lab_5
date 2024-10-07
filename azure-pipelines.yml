@@ -1,52 +1,57 @@
-name: Build, Test, and Deploy
+trigger:
+  branches:
+    include:
+      - main
 
-on:
-  push:
-    branches:
+pr:
+  branches:
+    include:
       - main
-  pull_request:
-    branches:
-      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+- job: Build
+  steps:
+    - script: |
+        echo "Checking out the repository"
+        git checkout $(Build.SourceBranchName)
+      displayName: 'Checkout code'
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v1
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    - script: |
+        sudo apt-get update
+        sudo apt-get install -y openjdk-17-jdk
+        java -version
+      displayName: 'Install Java 17'
 
-      - name: Build with Maven (compile phase)
-        run: |
-          cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
-          mvn compile
+    - script: |
+        cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
+        mvn compile
+      displayName: 'Build with Maven (compile phase)'
 
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+- job: Test
+  dependsOn: Build
+  steps:
+    - script: |
+        echo "Checking out the repository"
+        git checkout $(Build.SourceBranchName)
+      displayName: 'Checkout code'
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v1
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    - script: |
+        sudo apt-get update
+        sudo apt-get install -y openjdk-17-jdk
+        java -version
+      displayName: 'Install Java 17'
 
-      - name: Run tests with Maven (verify phase)
-        run: |
-          cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
-          mvn verify
+    - script: |
+        cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
+        mvn verify
+      displayName: 'Run tests with Maven (verify phase)'
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print deployment message
-        run: echo "Contrucción en progreso..."
+- job: Deploy
+  dependsOn: Test
+  steps:
+    - script: echo "Construcción en progreso..."
+      displayName: 'Print deployment message'
+
