@@ -19,15 +19,16 @@ pool:
 jobs:
 - job: Build
   steps:
-    - task: Checkout@2
+    - script: |
+        echo "Checking out the repository"
+        git checkout $(Build.SourceBranchName)
       displayName: 'Checkout code'
 
-    - task: UseJava@1
-      inputs:
-        versionSpec: '17'
-        jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'PreInstalled'
-        jdkVersionOption: '1.17'
+    - script: |
+        sudo apt-get update
+        sudo apt-get install -y openjdk-17-jdk
+        java -version
+      displayName: 'Install Java 17'
 
     - script: |
         cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
@@ -37,15 +38,16 @@ jobs:
 - job: Test
   dependsOn: Build
   steps:
-    - task: Checkout@2
+    - script: |
+        echo "Checking out the repository"
+        git checkout $(Build.SourceBranchName)
       displayName: 'Checkout code'
 
-    - task: UseJava@1
-      inputs:
-        versionSpec: '17'
-        jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'PreInstalled'
-        jdkVersionOption: '1.17'
+    - script: |
+        sudo apt-get update
+        sudo apt-get install -y openjdk-17-jdk
+        java -version
+      displayName: 'Install Java 17'
 
     - script: |
         cd GestorTareas/GestorTareasBackend/gestortareasbackend/gestortareasbackend
